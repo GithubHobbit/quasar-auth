@@ -2,15 +2,14 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title>
-          Auth App
-        </q-toolbar-title>
-        <template v-if="isAuthenticate()">
-          <q-btn flat :to="{name: 'signup'}">Sign Up</q-btn>
-          <q-btn flat :to="{name: 'login'}">Sign In</q-btn>
+        <q-toolbar-title> Auth App </q-toolbar-title>
+        <template v-if="isLogin">
+          <q-btn flat :to="{ name: 'profile' }">Profile</q-btn>
+          <q-btn flat @click="logout()">Logout</q-btn>
         </template>
         <div v-else>
-          <q-btn flat :to="{name: 'profile'}">Profile</q-btn>
+          <q-btn flat :to="{ name: 'signup' }">Sign Up</q-btn>
+          <q-btn flat :to="{ name: 'login' }">Sign In</q-btn>
         </div>
       </q-toolbar>
     </q-header>
@@ -21,28 +20,28 @@
   </q-layout>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-import VueJwtDecode from "vue-jwt-decode";
+<script setup lang="ts">
+import { useQuasar } from 'quasar';
+import { toRefs } from 'vue';
+import { useRouter } from 'vue-router';
 
-export default defineComponent({
-  name: 'MainLayout',
-
-  setup() {
-    return {
-      isAuthenticate(): boolean {
-        const token = localStorage.getItem('access_token');
-        if (!token) 
-          return false;
-        const payload = VueJwtDecode.decode(token)
-        if (payload.exp > Math.round(Date.now() / 1000)) {
-          return false;
-        }
-
-        return true;
-      }
-    }
-  }
-
+const props = defineProps({
+  isLogin: Boolean,
 });
+
+const router = useRouter();
+const $q = useQuasar();
+const { isLogin } = toRefs(props);
+
+function logout() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  $q.notify({
+    color: 'green-4',
+    textColor: 'white',
+    icon: 'cloud_done',
+    message: 'Saved',
+  });
+  router.push({ name: 'login' });
+}
 </script>

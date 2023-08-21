@@ -15,51 +15,55 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 
-
 const api = axios.create({ baseURL: 'http://localhost:3000' });
-api.interceptors.request.use(function (config) {
-  const accessToken = localStorage.getItem('access_token')
-  if (accessToken) {
-    config.headers['authorization'] = `Bearer ${accessToken}`
-    config.headers['cache-control'] = 'no-cache'
+api.interceptors.request.use(
+  function (config) {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      config.headers['authorization'] = `Bearer ${accessToken}`;
+      config.headers['cache-control'] = 'no-cache';
+    }
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
   }
-  return config
-}, function (error) {
-  return Promise.reject(error);
-});
+);
 
 async function refreshToken() {
-  console.log('refresh')
+  console.log('refresh');
   return api.post('/auth/refresh_token', {
     refreshToken: localStorage.getItem('refresh_token'),
   });
 }
 
-axios.interceptors.response.use(function (response) {
-  return response;
-}, async function (err) {
-  const originalConfig = err.config;
+axios.interceptors.response.use(
+  function (response) {
+    return response;
+  },
+  async function (err) {
+    const originalConfig = err.config;
 
-  if (err.response?.status === 401 && !originalConfig._retry) {
-    originalConfig._retry = true;
+    if (err.response?.status === 401 && !originalConfig._retry) {
+      originalConfig._retry = true;
 
-    try {
-      const rs = await refreshToken();
-      const { accessToken } = rs.data;
-      localStorage.setItem('accessToken', accessToken);
-      api.defaults.headers.common['x-access-token'] = accessToken;
+      try {
+        const rs = await refreshToken();
+        const { accessToken } = rs.data;
+        localStorage.setItem('accessToken', accessToken);
+        api.defaults.headers.common['x-access-token'] = accessToken;
 
-      return api(originalConfig);
-    } catch (_error) {
-      if (_error.response && _error.response.data) {
-        return Promise.reject(_error.response.data);
+        return api(originalConfig);
+      } catch (_error) {
+        if (_error.response && _error.response.data) {
+          return Promise.reject(_error.response.data);
+        }
+
+        return Promise.reject(_error);
       }
-
-      return Promise.reject(_error);
     }
-    }
-});
-
+  }
+);
 
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api

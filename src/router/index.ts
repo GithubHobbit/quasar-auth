@@ -19,14 +19,16 @@ import routes from './routes';
  */
 
 interface Token {
-  email: string,
-  exp: number
+  email: string;
+  exp: number;
 }
 
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
+    : process.env.VUE_ROUTER_MODE === 'history'
+    ? createWebHistory
+    : createWebHashHistory;
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -39,23 +41,23 @@ export default route(function (/* { store, ssrContext } */) {
   });
 
   Router.beforeEach((to, from, next) => {
-    console.log(to.path)
+    console.log(to.path);
     const publicPages = ['/auth/login', '/auth/signup'];
     const authRequired = !publicPages.includes(to.path);
     if (authRequired) {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('access_token');
       if (!token) {
-        return next({name: 'login'})
+        return next({ name: 'login' });
       }
       const payload = jwt_decode<Token>(token);
       const expTime = payload.exp * 1000;
       const curTime = new Date().getTime();
-      
+
       if (expTime < curTime) {
-        return next({name: 'login'})  
+        return next({ name: 'login' });
       }
     }
-    next()
+    next();
   });
 
   return Router;
