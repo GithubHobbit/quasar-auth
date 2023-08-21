@@ -16,6 +16,7 @@
             filled
             v-model="password"
             label="Password"
+            type="password"
             lazy-rules
             :rules="[
               (val) => (val && val.length > 0) || 'Please, type password',
@@ -72,6 +73,12 @@ export default {
               message: 'Login successfull',
             });
             router.push({ path: '/' });
+          })
+          .catch(() => {
+            $q.notify({
+              color: 'red-4',
+              message: 'Incorrect email or password',
+            });
           });
       },
 
