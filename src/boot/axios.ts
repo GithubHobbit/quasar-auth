@@ -15,7 +15,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 
-const api = axios.create({ baseURL: 'http://localhost:3000' });
+const api = axios.create({ baseURL: 'https://nest-auth-production.up.railway.app' });
 api.interceptors.request.use(
   function (config) {
     const accessToken = localStorage.getItem('access_token');
